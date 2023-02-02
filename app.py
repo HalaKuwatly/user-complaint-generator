@@ -2,7 +2,6 @@
 # Import from standard library
 import logging
 import random
-import re
 
 # Import from 3rd party libraries
 import streamlit as st
@@ -13,6 +12,12 @@ import oai
 
 # Configure logger
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
+
+
+i_recently_purchased_replacements = ["", "i recently purchased","i recently bought", "i bought", 
+"i purchased", "i orderded", "i recently ordered", "i just bought", 
+"i just recieved", "i have recieved", "i got", "i just got", "i made an order of", 
+]
 
 
 # Define functions
@@ -40,8 +45,10 @@ def generate_text(item: str, issue: str, given_prompt: str = None):
             
             st.session_state.text_error = ""
             st.session_state.n_requests += 1
+            text = openai.complete(prompt).strip().replace('"', "")
+            text = text.replace("I recently purchased", random.choice(i_recently_purchased_replacements))
             st.session_state.text = (
-                openai.complete(prompt).strip().replace('"', "")
+                text
             )
             logging.info(
                 f"Topic: {item}, {issue}\n"
