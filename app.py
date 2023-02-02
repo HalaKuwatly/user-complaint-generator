@@ -102,11 +102,4 @@ if st.session_state.text_error:
 
 if st.session_state.text:
     st.markdown("""---""")
-    st.text_area(label="Text", value=st.session_state.text, height=100)
-    
-    st.button(
-        label="Regenerate text",
-        type="secondary",
-        on_click=generate_text,
-        args=(item, issue, prompt),
-    )
+    st.text_area(label="Text", value=st.session_state.text, height=150)
