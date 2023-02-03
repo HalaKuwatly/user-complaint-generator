@@ -48,13 +48,14 @@ class Openai:
             "prompt": prompt,
             "temperature": temperature,
             "max_tokens": max_tokens,
+            "n": 2,
             "top_p": 1,  # default
             "frequency_penalty": 0,  # default,
             "presence_penalty": 0,  # default
         }
         try:
             response = openai.Completion.create(**kwargs)
-            return response["choices"][0]["text"]
+            return [response["choices"][0]["text"], response["choices"][1]["text"]]
 
         except Exception as e:
             logging.error(f"OpenAI API error: {e}")

@@ -6,7 +6,7 @@ import random
 # Import from 3rd party libraries
 import streamlit as st
 import streamlit.components.v1 as components
-
+import pandas as pd
 # Import modules
 import oai
 
@@ -14,53 +14,48 @@ import oai
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
 
-i_recently_purchased_replacements = ["", "i recently purchased","i recently bought", "i bought", 
-"i purchased", "i orderded", "i recently ordered", "i just bought", 
-"i just recieved", "i have recieved", "i got", "i just got", "i made an order of", 
+recently_purchased_replacements = ["", "recently purchased","recently bought", "bought", 
+"purchased", "orderded", "recently ordered", "just bought", 
+"just recieved", "have recieved", "got", "just got", "made an order of", 
 ]
 
-
+openai = oai.Openai()
+            
 # Define functions
-def generate_text(item: str, issue: str, given_prompt: str = None):
+def generate_text(persons:list, items: str, issue: str):
     """Generate text."""
-    if st.session_state.n_requests >= 5:
-        st.session_state.text_error = "Too many requests. Please wait a few seconds before generating another text."
-        logging.info(f"Session request limit reached: {st.session_state.n_requests}")
-        st.session_state.n_requests = 1
-        return
 
-    st.session_state.text = ""
+    st.session_state.texts = []
     st.session_state.text_error = ""
 
-    if not item:
-        st.session_state.text_error = "Please enter a topic"
-        return
-
+    items=items.split(",")
+    items = [i.strip() for i in items]
     with text_spinner_placeholder:
-        with st.spinner("Please wait while your text is being generated..."):
-           
-            prompt = given_prompt if given_prompt else f"Write a user complaint about a {item} that caused {issue}"
-            print(prompt)
-            openai = oai.Openai()
-            
-            st.session_state.text_error = ""
-            st.session_state.n_requests += 1
-            text = openai.complete(prompt).strip().replace('"', "")
-            text = text.replace("I recently purchased", random.choice(i_recently_purchased_replacements))
-            st.session_state.text = (
-                text
-            )
-            logging.info(
-                f"Topic: {item}, {issue}\n"
-                f"Text: {st.session_state.text}"
-            )
+        with st.spinner("Please wait while your texts are being generated..."):
+            for item in items:
+                person = random.choice(persons)
+                if person == "User":
+                    prompt = f"Write a user complaint about {item} that caused {issue}"
+                else:
+                    prompt = f"Write a user complaint about user's {person}'s {item} that caused {issue}"
+                
+                st.session_state.text_error = ""
+                texts = openai.complete(prompt)
+                for text in texts:
+                    text = text.strip().replace('"', "")
+                    text = text.replace("recently purchased", random.choice(recently_purchased_replacements))
+                    st.session_state.texts.append(text)
+                    logging.info(
+                        f"Prompt: {prompt}\n"
+                        f"Text: {text}"
+                    )
 
 
 # Configure Streamlit page and state
 st.set_page_config(page_title="Complaint Generation", page_icon="🤖")
 
-if "text" not in st.session_state:
-    st.session_state.text = ""
+if "texts" not in st.session_state:
+    st.session_state.texts = []
 if "text_error" not in st.session_state:
     st.session_state.text_error = ""
 if "image_error" not in st.session_state:
@@ -86,27 +81,37 @@ st.markdown(
     "This mini-app generates user complaints using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts."
 )
 
-item = st.text_input(label="Product (shirt, shoes, jacket, ...)", placeholder="Shoes")
+persons = st.multiselect("Person", ('User', 'Daughter', 'Son', 'Mother', 'Father', 'Husband', 'Wife'), default="User")
+item = st.text_input(label="Products (shirt, shoes, jacket, ...): You can provide multiple", placeholder="Shoes, sandals")
 issue = st.text_input(
-    label="Safety or Quality Issue (strangulation, broken ankle, suffocation, .. )",
+    label="Safety or Quality Issue (strangulation, broken ankle, suffocation, .. ): Only provide one",
     placeholder="broken ankle",
-)
-prompt = st.text_input(
-    label="You can also write the prompt yourself (optional)",
-    placeholder="Generate a user complaint about a sweater that caused an allergic reaction",
 )
 
 st.button(
-    label="Generate text",
-    type="secondary",
+    label="Generate texts",
+    type="primary",
     on_click=generate_text,
-    args=(item, issue, prompt),
+    args=(persons, item, issue),
 )
 
 text_spinner_placeholder = st.empty()
 if st.session_state.text_error:
     st.error(st.session_state.text_error)
 
-if st.session_state.text:
-    st.markdown("""---""")
-    st.text_area(label="Text", value=st.session_state.text, height=150)
+if st.session_state.texts:
+    print(len(st.session_state.texts))
+    df = pd.DataFrame({"texts": st.session_state.texts})
+    # CSS to inject contained in a string
+    hide_table_row_index = """
+                <style>
+                thead tr th:first-child {display:none}
+                tbody th {display:none}
+                </style>
+                """
+
+    # Inject CSS with Markdown
+    st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+    st.table(df)
+
