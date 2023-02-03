@@ -76,7 +76,7 @@ st.write(
 )
 
 # Render Streamlit page
-st.title("Generate Complains")
+st.title("Generate Complaints")
 st.markdown(
     "This mini-app generates user complaints using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts."
 )
