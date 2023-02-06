@@ -9,7 +9,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 # Import modules
 import oai
-
+from time import sleep
 # Configure logger
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
@@ -27,12 +27,16 @@ def generate_text(persons:list, items: str, issue: str):
 
     st.session_state.texts = []
     st.session_state.text_error = ""
+    st.session_state.n_requests = 0
 
     items=items.split(",")
     items = [i.strip() for i in items]
     with text_spinner_placeholder:
         with st.spinner("Please wait while your texts are being generated..."):
             for item in items:
+                if st.session_state.n_requests > 5:
+                    st.session_state.n_requests = 0
+                    sleep(2)
                 person = random.choice(persons)
                 if person == "User":
                     prompt = f"Write a user complaint about {item} that caused {issue}"
@@ -41,14 +45,16 @@ def generate_text(persons:list, items: str, issue: str):
                 
                 st.session_state.text_error = ""
                 texts = openai.complete(prompt)
-                for text in texts:
-                    text = text.strip().replace('"', "")
-                    text = text.replace("recently purchased", random.choice(recently_purchased_replacements))
-                    st.session_state.texts.append(text)
-                    logging.info(
-                        f"Prompt: {prompt}\n"
-                        f"Text: {text}"
-                    )
+                st.session_state.n_requests+=1
+                if texts:
+                    for text in texts:
+                        text = text.strip().replace('"', "")
+                        text = text.replace("recently purchased", random.choice(recently_purchased_replacements))
+                        st.session_state.texts.append(text)
+                        logging.info(
+                            f"Prompt: {prompt}\n"
+                            f"Text: {text}"
+                        )
 
 
 # Configure Streamlit page and state
@@ -62,7 +68,6 @@ if "image_error" not in st.session_state:
     st.session_state.image_error = ""
 if "n_requests" not in st.session_state:
     st.session_state.n_requests = 0
-
 # Force responsive layout for columns also on mobile
 st.write(
     """<style>
