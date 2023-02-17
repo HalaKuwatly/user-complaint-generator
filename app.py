@@ -86,7 +86,7 @@ st.markdown(
     "This mini-app generates user complaints using OpenAI's GPT-3 based [Davinci model](https://beta.openai.com/docs/models/overview) for texts."
 )
 
-persons = st.multiselect("Person", ('User', 'Daughter', 'Son', 'Mother', 'Father', 'Husband', 'Wife', 'Child', 'Baby', 'Newborn'), , default="User")
+persons = st.multiselect("Person", ('User', 'Daughter', 'Son', 'Mother', 'Father', 'Husband', 'Wife', 'Child', 'Baby', 'Newborn') , default="User")
 item = st.text_input(label="Products (shirt, shoes, jacket, ...): You can provide multiple", placeholder="Shoes, sandals")
 issue = st.text_input(
     label="Safety or Quality Issue (strangulation, broken ankle, suffocation, .. ): Only provide one",
