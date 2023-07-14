@@ -44,7 +44,7 @@ class Openai:
         Return: predicted response text
         """
         kwargs = {
-            "engine": "gpt-3.5-turbo",
+            "engine": "text-davinci-003",
             "prompt": prompt,
             "temperature": temperature,
             "max_tokens": max_tokens,
